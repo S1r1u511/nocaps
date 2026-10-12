@@ -1,0 +1,610 @@
+rules_version = '2';
+
+// Spark-plan model, Tier-0 hardened (2026-09-26): no Cloud Functions in the
+// write path. Every write is owner-bound and validated at the rules layer.
+//
+// Causality: a leaderboard increment is only accepted when the run (or quest
+// claim) that produced it is created in the SAME atomic commit (`getAfter`)
+// and carries a server `createdAt == request.time`. A run can therefore be
+// spent exactly once, only by the uid that created it, and only for the
+// amounts it declares.
+//
+// Periods (Oct 10): the server's clock owns the day. `periodStart` must be the
+// CURRENT UTC day (or ISO week) on the server, and a daily key must name that
+// same date. A run that arrives after its day ended can still be saved, but
+// without board increments (offline rule C, see meta/run_submission.gd).
+//
+// Rate limit: every run/quest commit must include `rate_limits/{uid}` with a
+// REQUEST_TIME transform, and that write is itself limited to one per 2 s.
+//
+// Public reads stay open for leaderboards, crew members, and champions so
+// standings can be read without a token.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // --- helpers ------------------------------------------------------------
+
+    function signed_in() {
+      return request.auth != null;
+    }
+
+    function is_midnight_utc(d) {
+      return d is timestamp
+        && d.hours() == 0
+        && d.minutes() == 0
+        && d.seconds() == 0
+        && d.nanos() == 0;
+    }
+
+    // Server time owns periods (Oct 10, fundamentals E9). A write may only target
+    // the CURRENT server day / ISO week; the phone's clock can make a write fail
+    // but can never move it into another period. A run that reaches the server
+    // after its day ended is saved as a personal score only (offline rule C).
+
+    // Daily period start: exactly today's UTC midnight (server time).
+    function valid_day(d) {
+      return is_midnight_utc(d)
+        && request.time >= d
+        && request.time < d + duration.value(24, 'h');
+    }
+
+    // Weekly period start: exactly this ISO week's Monday UTC midnight.
+    function valid_week(d) {
+      return is_midnight_utc(d)
+        && d.dayOfWeek() == 1
+        && request.time >= d
+        && request.time < d + duration.value(7, 'd');
+    }
+
+    function two(n) {
+      return n < 10 ? '0' + string(n) : string(n);
+    }
+
+    // "YYYY-MM-DD" of a timestamp (UTC).
+    function ymd(d) {
+      return string(d.year()) + '-' + two(d.month()) + '-' + two(d.day());
+    }
+
+    function daily_key(key) {
+      return key.matches('^daily_[0-9]{4}-[0-9]{2}-[0-9]{2}$');
+    }
+
+    function weekly_key(key) {
+      return key.matches('^weekly_[0-9]{4}-W[0-9]{2}$');
+    }
+
+    // Daily keys must name the same date as their start. (ISO week numbers can't
+    // be derived in rules; the weekly start is pinned to the current week instead.)
+    function period_ok(key, start) {
+      return (daily_key(key) && valid_day(start) && key == 'daily_' + ymd(start))
+        || (weekly_key(key) && valid_week(start));
+    }
+
+    // The rate-limit doc must have been stamped with THIS request's server time.
+    function rate_ok(uid) {
+      return getAfter(/databases/$(database)/documents/rate_limits/$(uid)).data.lastSubmitAt == request.time;
+    }
+
+    function run_doc(id) {
+      return getAfter(/databases/$(database)/documents/runs/$(id));
+    }
+
+    function claim_doc(id) {
+      return getAfter(/databases/$(database)/documents/quest_claims/$(id));
+    }
+
+    // Freshness + ownership + amount: the referenced run was created in this
+    // commit, belongs to the claimed community, and its banked contribution
+    // equals the score delta.
+    function run_score_ok(id, community_id, score_delta) {
+      return id is string
+        && id.size() > 0
+        && id.size() <= 128
+        && run_doc(id).data.createdAt == request.time
+        && run_doc(id).data.communityId == community_id
+        && run_doc(id).data.contribution == score_delta;
+    }
+
+    function run_landings_ok(id, landings_delta) {
+      return run_doc(id).data.landings == landings_delta;
+    }
+
+    function quest_ok(id, community_id, score_delta) {
+      return id is string
+        && id.size() > 0
+        && id.size() <= 160
+        && claim_doc(id).data.createdAt == request.time
+        && claim_doc(id).data.communityId == community_id
+        && claim_doc(id).data.points == score_delta;
+    }
+
+    // Player display names, mirroring core/player_name.gd: either a chosen name
+    // (3-16 letters, digits or _, not starting with "guest", not blocklisted) or
+    // the exact guest pattern "Guest 1234". Crew rows are not player names.
+    function player_name_ok(n) {
+      return n is string
+        && (
+          n.matches('^Guest [0-9]{4}$')
+          || (
+            n.matches('^[A-Za-z0-9_]{3,16}$')
+            && !n.lower().matches('^guest.*')
+            && !n.lower().matches('.*(fuck|shit|bitch|cunt|nigg|fag|rape|nazi|hitler|porn|slut|whore|retard|kys|admin|nocaps_team|moderator).*')
+          )
+        );
+    }
+
+    function entry_shape_ok(d) {
+      return d.keys().hasOnly([
+          "entityType", "communityId", "name", "score", "landings", "runs",
+          "uid", "periodKey", "periodStart", "source", "lastRunId", "lastQuestId"
+        ])
+        && d.entityType in ["community", "player"]
+        && d.communityId is string
+        && d.communityId.size() > 0
+        && d.communityId.size() <= 64
+        && d.name is string
+        && d.name.size() <= 64
+        && (d.entityType == "player" ? player_name_ok(d.name) : true)
+        && d.periodKey is string
+        && d.periodStart is timestamp
+        && d.score is int
+        && d.score >= 0
+        && d.score <= 1000000
+        && d.source in ["run", "quest"]
+        && (d.source == "run" ? d.keys().hasAny(["lastRunId"]) && d.lastRunId is string : true)
+        && (d.source == "quest" ? d.keys().hasAny(["lastQuestId"]) && d.lastQuestId is string : true);
+    }
+
+    // Previous integer values of a stored field, defaulting to 0 for legacy
+    // entries and for deployments that evaluate a first masked write as an
+    // update over an empty document.
+    function old_score(res) {
+      return res.keys().hasAny(["score"]) ? res.score : 0;
+    }
+
+    function old_landings(res) {
+      return res.keys().hasAny(["landings"]) ? res.landings : 0;
+    }
+
+    function old_runs(res) {
+      return res.keys().hasAny(["runs"]) ? res.runs : 0;
+    }
+
+    // First write of an entry: the score/landings/runs are the full parent
+    // values, causally bound to the run/claim created in this commit.
+    function entry_create_ok(d) {
+      return d.entityType == "community"
+        ? d.landings is int
+          && d.landings >= 0
+          && (
+            (
+              d.source == "run"
+              && run_score_ok(d.lastRunId, d.communityId, d.score)
+              && run_landings_ok(d.lastRunId, d.landings)
+            ) || (
+              d.source == "quest"
+              && d.landings == 0
+              && quest_ok(d.lastQuestId, d.communityId, d.score)
+            )
+          )
+        : d.uid == request.auth.uid
+          && d.runs is int
+          && (
+            (
+              d.source == "run"
+              && d.runs == 1
+              && run_score_ok(d.lastRunId, d.communityId, d.score)
+            ) || (
+              d.source == "quest"
+              && d.runs == 0
+              && quest_ok(d.lastQuestId, d.communityId, d.score)
+            )
+          );
+    }
+
+    // Later writes keep identity fields fixed and move score/landings/runs by
+    // exactly the parent's values for this commit.
+    function entry_update_ok(req, res) {
+      return req.diff(res).affectedKeys().hasOnly([
+          "score", "landings", "runs", "source", "lastRunId", "lastQuestId", "periodStart", "name"
+        ])
+        && (res.keys().hasAny(["entityType"]) ? req.entityType == res.entityType : true)
+        && (res.keys().hasAny(["communityId"]) ? req.communityId == res.communityId : true)
+        // Crew rows keep their name; player rows follow the player's display name.
+        && (res.keys().hasAny(["name"]) && req.entityType != "player" ? req.name == res.name : true)
+        && (res.keys().hasAny(["periodKey"]) ? req.periodKey == res.periodKey : true)
+        && (res.keys().hasAny(["periodStart"]) ? req.periodStart == res.periodStart : true)
+        && (
+          req.entityType == "community"
+            ? req.score >= old_score(res)
+              && req.landings is int
+              && req.landings >= old_landings(res)
+              && (
+                (
+                  req.source == "run"
+                  && run_score_ok(req.lastRunId, req.communityId, req.score - old_score(res))
+                  && run_landings_ok(req.lastRunId, req.landings - old_landings(res))
+                ) || (
+                  req.source == "quest"
+                  && req.landings == old_landings(res)
+                  && quest_ok(req.lastQuestId, req.communityId, req.score - old_score(res))
+                )
+              )
+            : req.uid == request.auth.uid
+              && (res.keys().hasAny(["uid"]) ? res.uid == request.auth.uid : true)
+              && req.score >= old_score(res)
+              && req.runs >= old_runs(res)
+              && (
+                (
+                  req.source == "run"
+                  && req.runs - old_runs(res) == 1
+                  && run_score_ok(req.lastRunId, req.communityId, req.score - old_score(res))
+                ) || (
+                  req.source == "quest"
+                  && req.runs == old_runs(res)
+                  && quest_ok(req.lastQuestId, req.communityId, req.score - old_score(res))
+                )
+              )
+        );
+    }
+
+    // --- players ------------------------------------------------------------
+
+    match /players/{uid} {
+      allow read: if signed_in() && request.auth.uid == uid;
+      allow write: if false;
+    }
+
+    // --- rate limits --------------------------------------------------------
+
+    // One doc per uid; every run/quest commit must touch it, and it advances at
+    // most once every 2 seconds. Clients cannot read it.
+    match /rate_limits/{uid} {
+      allow read: if false;
+
+      allow create: if signed_in()
+        && uid == request.auth.uid
+        && request.resource.data.keys().hasOnly(["lastSubmitAt"])
+        && request.resource.data.lastSubmitAt == request.time;
+
+      allow update: if signed_in()
+        && uid == request.auth.uid
+        && request.resource.data.keys().hasOnly(["lastSubmitAt"])
+        && request.resource.data.lastSubmitAt == request.time
+        && resource.data.lastSubmitAt is timestamp
+        && request.time >= resource.data.lastSubmitAt + duration.value(2, 's');
+
+      allow delete: if false;
+    }
+
+    // --- runs ---------------------------------------------------------------
+
+    // One immutable run per runId; a duplicate create fails, which is the
+    // client-side idempotency guard. Shape checks keep forged runs within the
+    // same bounds the client uses; score must be consistent with duration and
+    // with the banked contribution.
+    match /runs/{runId} {
+      allow read: if false;
+
+      allow create: if signed_in()
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.keys().hasOnly([
+             "uid", "communityId", "score", "contribution", "landings", "duration", "createdAt"
+           ])
+        && request.resource.data.communityId is string
+        && request.resource.data.communityId.size() > 0
+        && request.resource.data.communityId.size() <= 64
+        && request.resource.data.score is int
+        && request.resource.data.score >= 0
+        && request.resource.data.score <= 1000
+        && request.resource.data.contribution is int
+        && request.resource.data.contribution >= 0
+        && request.resource.data.contribution <= 1250
+        // contribution = score x streak multiplier, capped at x1.25
+        && request.resource.data.contribution * 4 <= request.resource.data.score * 5
+        && request.resource.data.landings is int
+        && request.resource.data.landings >= 0
+        && request.resource.data.landings <= request.resource.data.score
+        && request.resource.data.duration is int
+        && request.resource.data.duration >= 0
+        && request.resource.data.duration <= 1800000
+        // same plausibility ceiling the old submitRun used: 100 + 30 x seconds
+        && request.resource.data.score * 1000 <= 120000 + 30 * request.resource.data.duration
+        && request.resource.data.createdAt == request.time
+        && rate_ok(request.auth.uid);
+
+      allow update, delete: if false;
+    }
+
+    // --- leaderboards -------------------------------------------------------
+
+    // Community + player entries. "entries" is shared by both entity types and
+    // distinguished by `entityType`. Player entries are writable only by their
+    // own uid; every increment is causally bound to a run/claim created in the
+    // same commit.
+    match /leaderboards/{periodKey}/entries/{entryId} {
+      allow read: if true;
+
+      // A single rule for both operations: an "update" write with a mask on a
+      // missing document may be evaluated as create or as update depending on
+      // the deployment, so branch on the stored state and treat a document
+      // without a stored score as a first write.
+      allow create, update: if signed_in()
+        && entry_shape_ok(request.resource.data)
+        && request.resource.data.periodKey == periodKey
+        && period_ok(periodKey, request.resource.data.periodStart)
+        && (resource == null
+            ? entry_create_ok(request.resource.data)
+            : (resource.data.keys().hasAny(["score"])
+                ? entry_update_ok(request.resource.data, resource.data)
+                : entry_create_ok(request.resource.data)));
+
+      allow delete: if false;
+    }
+
+    // --- wallet links (rewards eligibility) ---------------------------------
+
+    // One doc per player uid, written ONLY by the linkWallet Cloud Function after
+    // it verifies the SIWS signature (verified: true). Public read: the prize
+    // board and crew titles show which players are wallet-verified.
+    match /wallet_links/{uid} {
+      allow read: if true;
+
+      // Oct 10 (fundamentals D2/D3): only the linkWallet function writes here,
+      // after verifying the Ed25519 signature server-side. Clients can't.
+      allow create, update: if false;
+
+      allow delete: if signed_in() && uid == request.auth.uid;
+    }
+
+    // --- crew requests (platform /onboard, reviewed at /admin) ---------------
+
+    // Admins: a Google-signed-in uid with an `admins/{uid}` doc (created by hand
+    // in the console; clients can never write it).
+    function is_admin() {
+      return signed_in()
+        && request.auth.token.firebase.sign_in_provider == "google.com"
+        && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
+    function short_text(v, max) {
+      return v is string && v.size() <= max;
+    }
+
+    function image_ok(v, max) {
+      return v is string && v.size() <= max && v.matches('^data:image/(webp|png);base64,.+');
+    }
+
+    // Live tournament state (status, start time, score baseline). Public read;
+    // only admins start/end it from /admin.
+    match /tournaments/{tournamentId} {
+      allow read: if true;
+      allow write: if is_admin() && tournamentId.matches('^[a-z0-9_-]{1,40}$');
+    }
+
+    // Live battle boards: one doc per tournament crew, id "<tournamentId>_<crewId>",
+    // { tid, crew, score, players: { <uid>: { n: name, s: score } }, lastRunId }.
+    // The admin creates/resets them at Start. While the battle is live, the
+    // game adds a run's contribution in the SAME commit that creates the run
+    // (same causality as the leaderboard entries). Writes are refused outside
+    // the battle window, so the board freezes at the end time on its own.
+    // Every viewer reads 2 small docs instead of querying the whole board.
+    function battle_live(tid) {
+      let t = get(/databases/$(database)/documents/tournaments/$(tid)).data;
+      return t.status == "live"
+        && t.startAt is timestamp
+        && t.durationSec is int
+        && request.time >= t.startAt + duration.value(5, 's')
+        && request.time < t.startAt + duration.value(t.durationSec + 5, 's');
+    }
+
+    function board_player_ok(req, res, delta) {
+      let p = req.players[request.auth.uid];
+      return req.players.diff(res.players).affectedKeys().hasOnly([request.auth.uid])
+        && p.keys().hasOnly(["n", "s"])
+        && player_name_ok(p.n)
+        && p.s == res.players.get(request.auth.uid, {"s": 0}).s + delta;
+    }
+
+    match /boards/{boardId} {
+      allow read: if true;
+      allow write: if is_admin() && boardId.matches('^[a-z0-9_-]{1,100}$');
+      allow update: if signed_in()
+        && boardId == resource.data.tid + "_" + resource.data.crew
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(["score", "players", "lastRunId"])
+        && request.resource.data.score is int
+        && run_score_ok(request.resource.data.lastRunId, resource.data.crew, request.resource.data.score - resource.data.score)
+        && board_player_ok(request.resource.data, resource.data, request.resource.data.score - resource.data.score)
+        && battle_live(resource.data.tid);
+    }
+
+    match /admins/{uid} {
+      allow read: if signed_in() && request.auth.uid == uid;
+      allow write: if false;
+    }
+
+    // Anyone (anonymous session) may submit; they can read their own; admins
+    // read all and set status/note. Images are small data URLs (<= ~225 KB each).
+    match /crew_requests/{requestId} {
+      allow read: if is_admin()
+        || (signed_in() && resource.data.submittedBy == request.auth.uid);
+
+      allow create: if signed_in()
+        && requestId.matches('^r[0-9a-f]{20}$')
+        && request.resource.data.keys().hasOnly(["name", "pitch", "x", "discord", "site", "contact", "mint", "mascot", "cap", "logo", "wallet", "status", "note", "submittedBy", "rights", "createdAt"])
+        && request.resource.data.keys().hasAll(["name", "pitch", "contact", "mascot", "cap", "status", "submittedBy", "rights", "createdAt"])
+        && request.resource.data.submittedBy == request.auth.uid
+        && request.resource.data.status == "pending"
+        && request.resource.data.get("note", "") == ""
+        && request.resource.data.rights == true
+        && request.resource.data.createdAt == request.time
+        && short_text(request.resource.data.name, 32) && request.resource.data.name.size() >= 2
+        && short_text(request.resource.data.pitch, 400)
+        && short_text(request.resource.data.get("x", ""), 200)
+        && short_text(request.resource.data.get("discord", ""), 200)
+        && short_text(request.resource.data.get("site", ""), 200)
+        && short_text(request.resource.data.contact, 120)
+        && (request.resource.data.get("mint", "") == "" || request.resource.data.mint.matches('^[1-9A-HJ-NP-Za-km-z]{32,44}$'))
+        && (request.resource.data.get("wallet", "") == "" || request.resource.data.wallet.matches('^[1-9A-HJ-NP-Za-km-z]{32,44}$'))
+        && image_ok(request.resource.data.mascot, 300000)
+        && image_ok(request.resource.data.cap, 300000)
+        && (request.resource.data.get("logo", "") == "" || image_ok(request.resource.data.logo, 160000));
+
+      allow update: if is_admin()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(["status", "note", "reviewedAt"])
+        && request.resource.data.status in ["pending", "approved", "rejected"]
+        && short_text(request.resource.data.note, 400)
+        && request.resource.data.reviewedAt == request.time;
+
+      allow delete: if is_admin();
+    }
+
+    // --- crew membership ----------------------------------------------------
+
+    // One create-only membership doc per (community, uid). Readable so the
+    // client can COUNT members; never updatable.
+    match /crew_members/{memberId} {
+      allow read: if true;
+
+      allow create: if signed_in()
+        && request.resource.data.keys().hasOnly(["communityId", "uid", "joinedAt"])
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.communityId is string
+        && request.resource.data.communityId.size() > 0
+        && request.resource.data.communityId.size() <= 64
+        && request.resource.data.joinedAt == request.time
+        && memberId.split('_').size() == 2
+        && memberId.split('_')[0] == request.resource.data.communityId
+        && memberId.split('_')[1] == request.auth.uid;
+
+      allow update, delete: if false;
+    }
+
+    // --- quests -------------------------------------------------------------
+
+    // One create-only claim per quest per uid per UTC day. Claim ids are
+    // `{uid}_{YYYY-MM-DD}_{questId}`; quest ids must be lowercase alphanumeric
+    // (no underscores) so the id can be validated. Points 1..150; the daily
+    // total is enforced through `quest_daily`.
+    match /quest_claims/{claimId} {
+      allow read: if signed_in() && resource.data.uid == request.auth.uid;
+
+      allow create: if signed_in()
+        && request.resource.data.keys().hasOnly([
+             "uid", "communityId", "day", "dayStart", "questId", "points", "createdAt"
+           ])
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.points is int
+        && request.resource.data.points >= 1
+        && request.resource.data.points <= 150
+        && valid_day(request.resource.data.dayStart)
+        && request.resource.data.day == ymd(request.resource.data.dayStart)
+        && request.resource.data.communityId is string
+        && request.resource.data.communityId.size() > 0
+        && request.resource.data.communityId.size() <= 64
+        && request.resource.data.questId.matches('^[a-z0-9]{1,32}$')
+        && claimId.split('_').size() == 3
+        && claimId.split('_')[0] == request.auth.uid
+        && claimId.split('_')[1] == request.resource.data.day
+        && claimId.split('_')[2] == request.resource.data.questId
+        && request.resource.data.createdAt == request.time
+        && rate_ok(request.auth.uid);
+
+      allow update, delete: if false;
+    }
+
+    // Per-uid daily quest counter, incremented in the same commit as the
+    // claim; rejects a total above 300 points per UTC day.
+    match /quest_daily/{counterId} {
+      allow read: if signed_in() && resource.data.uid == request.auth.uid;
+
+      allow create: if signed_in()
+        && request.resource.data.keys().hasOnly(["uid", "day", "dayStart", "total", "lastClaimId"])
+        && request.resource.data.uid == request.auth.uid
+        && valid_day(request.resource.data.dayStart)
+        && request.resource.data.total is int
+        && request.resource.data.total >= 1
+        && request.resource.data.total <= 300
+        && counterId.split('_').size() == 2
+        && counterId.split('_')[0] == request.auth.uid
+        && counterId.split('_')[1] == request.resource.data.day
+        && claim_doc(request.resource.data.lastClaimId).data.uid == request.auth.uid
+        && claim_doc(request.resource.data.lastClaimId).data.day == request.resource.data.day
+        && claim_doc(request.resource.data.lastClaimId).data.createdAt == request.time
+        && request.resource.data.total == claim_doc(request.resource.data.lastClaimId).data.points;
+
+      allow update: if signed_in()
+        && request.resource.data.keys().hasOnly(["uid", "day", "dayStart", "total", "lastClaimId"])
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.uid == resource.data.uid
+        && request.resource.data.day == resource.data.day
+        && request.resource.data.dayStart == resource.data.dayStart
+        && valid_day(request.resource.data.dayStart)
+        && request.resource.data.total is int
+        && request.resource.data.total >= resource.data.total
+        && request.resource.data.total <= 300
+        && counterId.split('_').size() == 2
+        && counterId.split('_')[0] == request.auth.uid
+        && counterId.split('_')[1] == request.resource.data.day
+        && claim_doc(request.resource.data.lastClaimId).data.uid == request.auth.uid
+        && claim_doc(request.resource.data.lastClaimId).data.day == request.resource.data.day
+        && claim_doc(request.resource.data.lastClaimId).data.createdAt == request.time
+        && request.resource.data.total == resource.data.total + claim_doc(request.resource.data.lastClaimId).data.points
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(["total", "lastClaimId"]);
+
+      allow delete: if false;
+    }
+
+    // --- champions ----------------------------------------------------------
+
+    // Closed-period champion. Admin-only (Oct 10): a client could previously
+    // write any winner first. Moves to a scheduled server job later.
+    match /champions/{championId} {
+      allow read: if true;
+
+      allow create: if is_admin()
+        && request.resource.data.keys().hasOnly([
+             "periodKey", "periodStart", "communityId", "winner", "score", "mvpUid", "createdAt"
+           ])
+        && period_ok(request.resource.data.periodKey, request.resource.data.periodStart)
+        && request.resource.data.communityId is string
+        && request.resource.data.communityId.size() > 0
+        && request.resource.data.communityId.size() <= 64
+        && request.resource.data.winner is string
+        && request.resource.data.winner.size() <= 64
+        && request.resource.data.mvpUid is string
+        && request.resource.data.mvpUid.size() <= 128
+        && request.resource.data.score is int
+        && request.resource.data.score >= 0
+        && request.resource.data.score <= 1000000
+        && request.resource.data.createdAt == request.time;
+
+      allow update, delete: if false;
+    }
+
+    // --- unchanged public/config collections --------------------------------
+
+    match /communities/{communityId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /periods/{periodId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // App config (Oct 10, fundamentals E2): `config/app` holds minVersion,
+    // latestVersion, message and updateUrl. Read once per launch; set by hand in
+    // the console. Below minVersion the app shows a blocking "please update".
+    match /config/{docId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /challenges/{uid} {
+      allow read, write: if false;
+    }
+  }
+}

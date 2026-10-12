@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="MascotDefinition" format=3 uid="uid://w1muyrqcv08r"]
+
+[ext_resource type="Texture2D" uid="uid://uumvrxrg1ftv" path="res://assets/communities/mert/mascot.png" id="1_uxsqb"]
+[ext_resource type="Script" uid="uid://be3gfrldllw4i" path="res://communities/mascot_definition.gd" id="2_sjbpl"]
+
+[resource]
+script = ExtResource("2_sjbpl")
+id = &"mert"
+display_name = "Mert"
+idle_texture = ExtResource("1_uxsqb")
+cap_anchor = Vector2(0.54, 0.11)
+cap_scale = 0.78
+head_band_half_width = 0.38

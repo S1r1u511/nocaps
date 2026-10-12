@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="MascotDefinition" format=3]
+
+[ext_resource type="Texture2D" uid="uid://dnopea6subpse" path="res://assets/communities/mole/mole.png" id="1_mole"]
+[ext_resource type="Script" path="res://communities/mascot_definition.gd" id="2_mole"]
+
+[resource]
+script = ExtResource("2_mole")
+id = &"mole"
+display_name = "Mole"
+idle_texture = ExtResource("1_mole")
+cap_anchor = Vector2(0.58, 0.27)
+cap_scale = 0.7
+cap_rotation = 0.0
+head_band_center_x = 0.57
+head_band_half_width = 0.32
+head_band_top = 0.11
+head_band_depth = 0.16

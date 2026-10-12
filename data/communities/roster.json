@@ -1,0 +1,132 @@
+[
+	{
+		"id": "mert",
+		"display_name": "Mert",
+		"short_description": "The bearded commando of the Mert crew.",
+		"description": "",
+		"accent_color": "#D94F3D",
+		"socials": {
+			"x_handle": "",
+			"telegram_url": "",
+			"website_url": "",
+			"discord_url": ""
+		},
+		"token": {
+			"symbol": "",
+			"ca": "",
+			"show_chart": ""
+		},
+		"join_rules": [],
+		"min_hold": "",
+		"campaign": {
+			"title": "",
+			"reward": "",
+			"ends_at": ""
+		},
+		"permission": true
+	},
+	{
+		"id": "wif",
+		"display_name": "Wif",
+		"short_description": "The shiba with the thousand-yard stare.",
+		"description": "",
+		"accent_color": "#F0A03C",
+		"socials": {
+			"x_handle": "",
+			"telegram_url": "",
+			"website_url": "",
+			"discord_url": ""
+		},
+		"token": {
+			"symbol": "",
+			"ca": "",
+			"show_chart": ""
+		},
+		"join_rules": [],
+		"min_hold": "",
+		"campaign": {
+			"title": "",
+			"reward": "",
+			"ends_at": ""
+		},
+		"permission": true
+	},
+	{
+		"id": "bitsy",
+		"display_name": "Bitsy",
+		"short_description": "The pixel-king of the Bitsy crew.",
+		"description": "",
+		"accent_color": "#9657DE",
+		"socials": {
+			"x_handle": "",
+			"telegram_url": "",
+			"website_url": "",
+			"discord_url": ""
+		},
+		"token": {
+			"symbol": "",
+			"ca": "",
+			"show_chart": ""
+		},
+		"join_rules": [],
+		"min_hold": "",
+		"campaign": {
+			"title": "",
+			"reward": "",
+			"ends_at": ""
+		},
+		"permission": true
+	},
+	{
+		"id": "mole",
+		"display_name": "Mole",
+		"short_description": "The hard-hat digger of the Mole crew.",
+		"description": "",
+		"accent_color": "#3FA89E",
+		"socials": {
+			"x_handle": "",
+			"telegram_url": "",
+			"website_url": "",
+			"discord_url": ""
+		},
+		"token": {
+			"symbol": "",
+			"ca": "",
+			"show_chart": ""
+		},
+		"join_rules": [],
+		"min_hold": "",
+		"campaign": {
+			"title": "",
+			"reward": "",
+			"ends_at": ""
+		},
+		"permission": true
+	},
+	{
+		"id": "solcity",
+		"display_name": "SolanaCity",
+		"short_description": "Game-like social hub fully onchain on Solana.",
+		"description": "",
+		"accent_color": "#14EBC1",
+		"socials": {
+			"x_handle": "@PlaySolCity",
+			"telegram_url": "",
+			"website_url": "https://www.solanacity.io",
+			"discord_url": ""
+		},
+		"token": {
+			"symbol": "",
+			"ca": "",
+			"show_chart": ""
+		},
+		"join_rules": [],
+		"min_hold": "",
+		"campaign": {
+			"title": "",
+			"reward": "",
+			"ends_at": ""
+		},
+		"permission": true
+	}
+]

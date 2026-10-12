@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="CommunityDefinition" format=3]
+
+[ext_resource type="Resource" path="res://data/communities/solcity/cap.tres" id="1_7sy5y"]
+[ext_resource type="Resource" path="res://data/communities/solcity/mascot.tres" id="2_dl3tb"]
+[ext_resource type="Script" path="res://communities/community_definition.gd" id="3_o5ssj"]
+
+[resource]
+script = ExtResource("3_o5ssj")
+id = &"solcity"
+display_name = "SolanaCity"
+short_description = "Game-like social hub fully onchain on Solana."
+mascot = ExtResource("2_dl3tb")
+cap = ExtResource("1_7sy5y")
+accent_color = Color(0.078431375, 0.92156863, 0.75686276, 1)
+sort_order = 4
+weekly_tiers = PackedInt32Array(150, 450, 1100)
+x_handle = "@PlaySolCity"
+website_url = "https://www.solanacity.io"

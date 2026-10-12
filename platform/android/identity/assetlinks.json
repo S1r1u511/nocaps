@@ -1,0 +1,23 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.nocapsfun.game.dev",
+      "sha256_cert_fingerprints": [
+        "7B:A6:32:2A:C7:C1:94:D2:0C:0E:B8:BA:E8:0D:CC:12:97:53:1A:0D:44:37:FF:17:FD:09:51:C9:AB:79:D3:CB"
+      ]
+    }
+  },
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.nocapsfun.game",
+      "sha256_cert_fingerprints": [
+        "7B:A6:32:2A:C7:C1:94:D2:0C:0E:B8:BA:E8:0D:CC:12:97:53:1A:0D:44:37:FF:17:FD:09:51:C9:AB:79:D3:CB",
+        "2E:7F:F6:F3:14:45:31:6B:68:44:E4:3C:CF:04:8D:70:15:22:4D:5D:82:14:64:3D:4C:76:93:C1:DF:2B:57:76"
+      ]
+    }
+  }
+]

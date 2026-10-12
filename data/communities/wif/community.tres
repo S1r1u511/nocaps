@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="CommunityDefinition" format=3]
+
+[ext_resource type="Resource" path="res://data/communities/wif/mascot.tres" id="1_imcwk"]
+[ext_resource type="Script" path="res://communities/community_definition.gd" id="2_aohom"]
+[ext_resource type="Resource" path="res://data/communities/wif/cap.tres" id="3_wifcap"]
+
+[resource]
+script = ExtResource("2_aohom")
+id = &"wif"
+display_name = "Wif"
+short_description = "The shiba with the thousand-yard stare."
+mascot = ExtResource("1_imcwk")
+cap = ExtResource("3_wifcap")
+accent_color = Color(0.9411765, 0.627451, 0.23529412, 1)
+sort_order = 1
+weekly_tiers = PackedInt32Array(150, 450, 1100)

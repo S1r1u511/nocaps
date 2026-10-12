@@ -1,0 +1,60 @@
+; Engine configuration file.
+; It's best edited using the editor UI and not directly,
+; since the parameters that go here are not all obvious.
+;
+; Format:
+;   [section] ; section goes between []
+;   param=value ; assign values to parameters
+
+config_version=5
+
+[application]
+
+config/name="nocapsfun"
+config/version="1.0.0"
+run/main_scene="res://scenes/main.tscn"
+config/features=PackedStringArray("4.7", "GL Compatibility")
+boot_splash/bg_color=Color(0.113725, 0.0627451, 0.2, 1)
+boot_splash/image="res://assets/brand/splash.png"
+config/icon="res://assets/brand/icon_512.png"
+
+[autoload]
+
+WalletService="*res://platform/wallet_service.gd"
+SoundService="*res://core/sound_service.gd"
+
+[display]
+
+window/size/viewport_width=720
+window/size/viewport_height=1280
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
+window/handheld/orientation=1
+
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/nocaps_bridge/plugin.cfg")
+
+[gui]
+
+theme/custom_font="res://data/fonts/fredoka_body.tres"
+
+[nocaps]
+
+backend/project_id="nocaps-v1"
+backend/auth_url="https://identitytoolkit.googleapis.com"
+backend/api_key="AIzaSyDv32eVIYe2m0zwETKMB_F4T1DGcTBLXkQ"
+backend/project_id.nocaps_dev="nocaps-dev"
+backend/api_key.nocaps_dev="AIzaSyBxeIt_9fuWUU4Ic48MkQ9TpTVnWWC8qww"
+wallet/cluster="mainnet-beta"
+
+[physics]
+
+3d/physics_engine="Jolt Physics"
+
+[rendering]
+
+rendering_device/driver.windows="d3d12"
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"
+textures/vram_compression/import_etc2_astc=true

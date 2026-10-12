@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="CommunityDefinition" format=3]
+
+[ext_resource type="Resource" path="res://data/communities/bitsy/mascot.tres" id="1_bitsy"]
+[ext_resource type="Script" path="res://communities/community_definition.gd" id="2_bitsy"]
+[ext_resource type="Resource" path="res://data/communities/bitsy/cap.tres" id="3_bitsy"]
+
+[resource]
+script = ExtResource("2_bitsy")
+id = &"bitsy"
+display_name = "Bitsy"
+short_description = "The pixel-king of the Bitsy crew."
+mascot = ExtResource("1_bitsy")
+cap = ExtResource("3_bitsy")
+accent_color = Color(0.5882353, 0.34117648, 0.87058824, 1)
+sort_order = 2
+weekly_tiers = PackedInt32Array(150, 450, 1100)

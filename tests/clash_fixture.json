@@ -1,0 +1,83 @@
+{
+  "description": "Shared Today's Clash fixture. Both the GDScript rule (nocapsfun tests/clash_smoke.gd) and the TypeScript rule (nocaps-web tests/e2e/clash.spec.ts) must return exactly these results. Rule: score descending, ties by crew id ascending, only score > 0, top 2 = the clash, fewer than 2 positive crews = no clash.",
+  "cases": [
+    {
+      "name": "ordering_and_zero_and_tie",
+      "rows": [
+        { "id": "mert", "name": "Mert", "score": 300 },
+        { "id": "wif", "name": "Wif", "score": 500 },
+        { "id": "bitsy", "name": "Bitsy", "score": 0 },
+        { "id": "mole", "name": "Mole", "score": 500 }
+      ],
+      "expected": {
+        "active": true,
+        "a": { "id": "mole", "name": "Mole", "score": 500 },
+        "b": { "id": "wif", "name": "Wif", "score": 500 }
+      }
+    },
+    {
+      "name": "single_scorer_is_no_clash",
+      "rows": [
+        { "id": "mert", "name": "Mert", "score": 42 },
+        { "id": "wif", "name": "Wif", "score": 0 },
+        { "id": "bitsy", "name": "Bitsy", "score": 0 }
+      ],
+      "expected": { "active": false, "a": null, "b": null }
+    },
+    {
+      "name": "all_zero_is_no_clash",
+      "rows": [
+        { "id": "mert", "name": "Mert", "score": 0 },
+        { "id": "wif", "name": "Wif", "score": 0 }
+      ],
+      "expected": { "active": false, "a": null, "b": null }
+    },
+    {
+      "name": "empty_rows_is_no_clash",
+      "rows": [],
+      "expected": { "active": false, "a": null, "b": null }
+    },
+    {
+      "name": "top_two_only",
+      "rows": [
+        { "id": "mert", "name": "Mert", "score": 90 },
+        { "id": "wif", "name": "Wif", "score": 70 },
+        { "id": "bitsy", "name": "Bitsy", "score": 50 }
+      ],
+      "expected": {
+        "active": true,
+        "a": { "id": "mert", "name": "Mert", "score": 90 },
+        "b": { "id": "wif", "name": "Wif", "score": 70 }
+      }
+    },
+    {
+      "name": "tie_for_second_breaks_by_id",
+      "rows": [
+        { "id": "zulu", "name": "Zulu", "score": 100 },
+        { "id": "omega", "name": "Omega", "score": 80 },
+        { "id": "beta", "name": "Beta", "score": 80 },
+        { "id": "alpha", "name": "Alpha", "score": 80 }
+      ],
+      "expected": {
+        "active": true,
+        "a": { "id": "zulu", "name": "Zulu", "score": 100 },
+        "b": { "id": "alpha", "name": "Alpha", "score": 80 }
+      }
+    },
+    {
+      "name": "input_order_does_not_matter",
+      "rows": [
+        { "id": "bitsy", "name": "Bitsy", "score": 5 },
+        { "id": "mert", "name": "Mert", "score": 900 },
+        { "id": "wif", "name": "Wif", "score": 850 },
+        { "id": "mole", "name": "Mole", "score": 0 }
+      ],
+      "expected": {
+        "active": true,
+        "a": { "id": "mert", "name": "Mert", "score": 900 },
+        "b": { "id": "wif", "name": "Wif", "score": 850 }
+      }
+    }
+  ],
+  "reset": { "now": 1791022191, "seconds": 49809, "text": "13:50" }
+}

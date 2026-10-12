@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="CapDefinition" format=3]
+
+[ext_resource type="Script" path="res://communities/cap_definition.gd" id="1_mole"]
+[ext_resource type="Texture2D" uid="uid://dwcnwj3im8a00" path="res://assets/communities/mole/cap.png" id="2_mole"]
+
+[resource]
+script = ExtResource("1_mole")
+id = &"mole"
+display_name = "Mole Helmet"
+side_texture = ExtResource("2_mole")
+center_texture = ExtResource("2_mole")

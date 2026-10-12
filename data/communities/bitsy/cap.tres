@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="CapDefinition" format=3]
+
+[ext_resource type="Script" path="res://communities/cap_definition.gd" id="1_bitsy"]
+[ext_resource type="Texture2D" uid="uid://q162mhwikiq3" path="res://assets/communities/bitsy/cap.png" id="2_bitsy"]
+
+[resource]
+script = ExtResource("1_bitsy")
+id = &"bitsy"
+display_name = "Bitsy Cap"
+side_texture = ExtResource("2_bitsy")
+center_texture = ExtResource("2_bitsy")

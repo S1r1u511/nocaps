@@ -1,0 +1,26 @@
+# Godot 4+ specific ignores
+.godot/
+/android/
+/.build/
+/build/web/
+/platform/android/bridge_spike/.gradle/
+/platform/android/bridge_spike/.kotlin/
+/platform/android/bridge_spike/local.properties
+/platform/android/bridge_spike/plugin/build/
+
+# macOS
+.DS_Store
+
+# Signing secrets (real keystore lives in ~/.nocaps/keys, outside the repo)
+*.jks
+*.keystore
+release.env
+
+# Backend (Firebase)
+backend/functions/node_modules/
+backend/.firebase/
+backend/.firebaserc
+backend/.env
+backend/**/serviceAccount*.json
+backend/**/*.log
+backend/tests/node_modules/

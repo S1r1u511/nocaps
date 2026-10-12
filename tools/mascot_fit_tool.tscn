@@ -1,0 +1,10 @@
+[gd_scene format=3 uid="uid://c1btjy7nvu1n"]
+
+[ext_resource type="Script" uid="uid://dnt3qjeu1npwo" path="res://tools/mascot_fit_tool.gd" id="1"]
+[ext_resource type="Resource" uid="uid://w1muyrqcv08r" path="res://data/communities/mert/mascot.tres" id="2"]
+[ext_resource type="Resource" path="res://data/communities/mert/community.tres" id="3"]
+
+[node name="MascotFitTool" type="Node2D" unique_id=2038184123]
+script = ExtResource("1")
+community = ExtResource("3")
+mascot = ExtResource("2")

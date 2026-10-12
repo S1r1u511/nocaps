@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="MascotDefinition" format=3]
+
+[ext_resource type="Texture2D" path="res://assets/communities/wif/mascot.png" id="1_8txbe"]
+[ext_resource type="Script" path="res://communities/mascot_definition.gd" id="2_iksjb"]
+
+[resource]
+script = ExtResource("2_iksjb")
+id = &"wif"
+display_name = "Wif"
+idle_texture = ExtResource("1_8txbe")
+cap_anchor = Vector2(0.5, 0.1)
+cap_scale = 0.55
+head_band_half_width = 0.4

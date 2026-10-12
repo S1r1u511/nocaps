@@ -1,0 +1,12 @@
+{
+  "name": "nocaps-rules-tests",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "cd .. && npx firebase-tools emulators:exec --only firestore --project demo-nocaps \"node tests/rules.test.mjs\""
+  },
+  "devDependencies": {
+    "@firebase/rules-unit-testing": "^3.0.4",
+    "firebase": "^10.14.1"
+  }
+}

@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="CapDefinition" format=3]
+
+[ext_resource type="Script" path="res://communities/cap_definition.gd" id="1_cap"]
+[ext_resource type="Texture2D" path="res://assets/communities/wif/cap.png" id="2_img"]
+
+[resource]
+script = ExtResource("1_cap")
+id = &"wif"
+display_name = "Wif Beanie"
+side_texture = ExtResource("2_img")
+center_texture = ExtResource("2_img")

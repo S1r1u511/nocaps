@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="MascotDefinition" format=3]
+
+[ext_resource type="Texture2D" uid="uid://coi3kfuvh7yhq" path="res://assets/communities/bitsy/mascot.png" id="1_bitsy"]
+[ext_resource type="Script" path="res://communities/mascot_definition.gd" id="2_bitsy"]
+
+[resource]
+script = ExtResource("2_bitsy")
+id = &"bitsy"
+display_name = "Bitsy"
+idle_texture = ExtResource("1_bitsy")
+cap_anchor = Vector2(0.47, 0.1)
+cap_scale = 0.6
+cap_rotation = -1.5
+head_band_center_x = 0.47
+head_band_half_width = 0.36
+head_band_top = 0.0
+head_band_depth = 0.16

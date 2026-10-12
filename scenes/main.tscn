@@ -1,0 +1,77 @@
+[gd_scene load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://core/app_flow.gd" id="1"]
+[ext_resource type="Script" path="res://core/save_manager.gd" id="2"]
+[ext_resource type="Script" path="res://platform/backend_client.gd" id="3"]
+[ext_resource type="Script" path="res://ui/shell_ui.gd" id="4"]
+[ext_resource type="Script" path="res://ui/toasts.gd" id="5"]
+[ext_resource type="Texture2D" path="res://assets/backgrounds/background02.png" id="6"]
+
+[sub_resource type="Gradient" id="Gradient_shade"]
+offsets = PackedFloat32Array(0, 0.5, 1)
+colors = PackedColorArray(0.113725, 0.062745, 0.2, 0.55, 0.113725, 0.062745, 0.2, 0.25, 0.113725, 0.062745, 0.2, 0.75)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_shade"]
+gradient = SubResource("Gradient_shade")
+width = 8
+height = 256
+fill = 0
+fill_from = Vector2(0.5, 0)
+fill_to = Vector2(0.5, 1)
+
+[node name="Main" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Backdrop" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("6")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="BackdropShade" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = SubResource("GradientTexture2D_shade")
+expand_mode = 1
+stretch_mode = 0
+
+[node name="ScreenContainer" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="SaveManager" type="Node" parent="."]
+script = ExtResource("2")
+
+[node name="BackendClient" type="Node" parent="."]
+script = ExtResource("3")
+
+[node name="Shell" type="CanvasLayer" parent="."]
+script = ExtResource("4")
+
+[node name="Toasts" type="CanvasLayer" parent="."]
+script = ExtResource("5")
+
+[node name="AppFlow" type="Node" parent="."]
+script = ExtResource("1")

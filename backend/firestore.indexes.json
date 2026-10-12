@@ -1,0 +1,47 @@
+{
+	"indexes": [
+		{
+			"collectionGroup": "periods",
+			"queryScope": "COLLECTION",
+			"fields": [
+				{ "fieldPath": "closed", "order": "ASCENDING" },
+				{ "fieldPath": "end", "order": "ASCENDING" }
+			]
+		},
+		{
+			"collectionGroup": "entries",
+			"queryScope": "COLLECTION",
+			"fields": [
+				{ "fieldPath": "entityType", "order": "ASCENDING" },
+				{ "fieldPath": "score", "order": "DESCENDING" }
+			]
+		},
+		{
+			"collectionGroup": "entries",
+			"queryScope": "COLLECTION",
+			"fields": [
+				{ "fieldPath": "entityType", "order": "ASCENDING" },
+				{ "fieldPath": "communityId", "order": "ASCENDING" },
+				{ "fieldPath": "score", "order": "DESCENDING" }
+			]
+		},
+		{
+			"collectionGroup": "entries",
+			"queryScope": "COLLECTION",
+			"fields": [
+				{ "fieldPath": "entityType", "order": "ASCENDING" },
+				{ "fieldPath": "communityId", "order": "ASCENDING" },
+				{ "fieldPath": "score", "order": "ASCENDING" }
+			]
+		},
+		{
+			"collectionGroup": "champions",
+			"queryScope": "COLLECTION",
+			"fields": [
+				{ "fieldPath": "communityId", "order": "ASCENDING" },
+				{ "fieldPath": "periodStart", "order": "DESCENDING" }
+			]
+		}
+	],
+	"fieldOverrides": []
+}

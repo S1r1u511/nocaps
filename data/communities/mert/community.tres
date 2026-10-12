@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="CommunityDefinition" format=3 uid="uid://0d718pxm7kf7"]
+
+[ext_resource type="Resource" uid="uid://w1muyrqcv08r" path="res://data/communities/mert/mascot.tres" id="1_kshum"]
+[ext_resource type="Script" uid="uid://bloxq24dq6qw8" path="res://communities/community_definition.gd" id="2_u6180"]
+[ext_resource type="Resource" path="res://data/communities/mert/cap.tres" id="3_mertcap"]
+
+[resource]
+script = ExtResource("2_u6180")
+id = &"mert"
+display_name = "Mert"
+short_description = "The bearded commando of the Mert crew."
+mascot = ExtResource("1_kshum")
+cap = ExtResource("3_mertcap")
+accent_color = Color(0.8509804, 0.30980393, 0.23921569, 1)
+weekly_tiers = PackedInt32Array(150, 450, 1100)

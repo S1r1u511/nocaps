@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="BackgroundProfile" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://communities/background_profile.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/backgrounds/background02.png" id="2"]
+
+[resource]
+script = ExtResource("1")
+sky_texture = ExtResource("2")
+sky_top_color = Color(0.078, 0.102, 0.2, 1)
+sky_bottom_color = Color(0.29, 0.227, 0.388, 1)
+accent_color = Color(1, 0.812, 0.478, 1)
+ground_color = Color(0.12, 0.11, 0.19, 1)
+ground_line_color = Color(1, 0.851, 0.627, 1)

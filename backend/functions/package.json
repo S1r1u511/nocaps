@@ -1,0 +1,20 @@
+{
+	"name": "nocaps-functions",
+	"private": true,
+	"description": "NOCAPS backend — Firebase Cloud Functions (client-agnostic HTTPS API)",
+	"main": "index.js",
+	"engines": {
+		"node": "20"
+	},
+	"scripts": {
+		"serve": "firebase emulators:start --only functions,firestore,auth",
+		"deploy": "firebase deploy --only functions,firestore",
+		"logs": "firebase functions:log",
+		"test": "node test/wallet.test.js"
+	},
+	"dependencies": {
+		"firebase-admin": "^12.7.0",
+		"firebase-functions": "^5.1.1",
+		"tweetnacl": "^1.0.3"
+	}
+}

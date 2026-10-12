@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="CommunityDefinition" format=3]
+
+[ext_resource type="Resource" path="res://data/communities/mole/mascot.tres" id="1_mole"]
+[ext_resource type="Script" path="res://communities/community_definition.gd" id="2_mole"]
+[ext_resource type="Resource" path="res://data/communities/mole/cap.tres" id="3_mole"]
+
+[resource]
+script = ExtResource("2_mole")
+id = &"mole"
+display_name = "Mole"
+short_description = "The hard-hat digger of the Mole crew."
+mascot = ExtResource("1_mole")
+cap = ExtResource("3_mole")
+accent_color = Color(0.24705882, 0.65882355, 0.61960787, 1)
+enabled = true
+sort_order = 3
+weekly_tiers = PackedInt32Array(150, 450, 1100)

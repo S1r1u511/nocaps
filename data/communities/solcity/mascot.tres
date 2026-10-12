@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="MascotDefinition" format=3]
+
+[ext_resource type="Texture2D" path="res://assets/communities/solcity/mascot.png" id="1_v4eib"]
+[ext_resource type="Script" path="res://communities/mascot_definition.gd" id="2_w78vn"]
+
+[resource]
+script = ExtResource("2_w78vn")
+id = &"solcity"
+display_name = "SolanaCity"
+idle_texture = ExtResource("1_v4eib")
+cap_anchor = Vector2(0.54, 0.11)
+cap_scale = 0.78
+head_band_half_width = 0.36
+head_band_depth = 0.16

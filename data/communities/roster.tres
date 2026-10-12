@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="CommunityRoster" format=3]
+
+[ext_resource type="Script" path="res://communities/community_definition.gd" id="1_76in3"]
+[ext_resource type="Resource" path="res://data/communities/mert/community.tres" id="2_wx2pp"]
+[ext_resource type="Resource" path="res://data/communities/wif/community.tres" id="3_c5o01"]
+[ext_resource type="Script" path="res://communities/community_roster.gd" id="4_bhcw1"]
+[ext_resource type="Resource" path="res://data/communities/bitsy/community.tres" id="5_bitsy"]
+[ext_resource type="Resource" path="res://data/communities/mole/community.tres" id="6_mole"]
+[ext_resource type="Resource" path="res://data/communities/solcity/community.tres" id="7_solcity"]
+
+[resource]
+script = ExtResource("4_bhcw1")
+communities = Array[ExtResource("1_76in3")]([ExtResource("2_wx2pp"), ExtResource("3_c5o01"), ExtResource("5_bitsy"), ExtResource("6_mole"), ExtResource("7_solcity")])
