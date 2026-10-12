@@ -100,6 +100,19 @@ Wallet identity uses **Mobile Wallet Adapter (MWA 2.0) Sign-In-With-Solana** (ma
 
 ## Build and test
 
+### Build the APK from source
+
+1. Install **Godot 4.7** with its Android export templates, plus the Android SDK and JDK 17
+   (set both paths in Editor Settings → Export → Android).
+2. Clone this repo and open `project.godot` in Godot.
+3. Project → **Install Android Build Template** (the build uses Gradle; the Wallet Adapter bridge in
+   `addons/nocaps_bridge` is included).
+4. Project → Export → **Android** → **Export Project** with *Export With Debug* ticked. This signs
+   with Godot's debug key and connects to the live backend, so the APK plays like the release.
+5. Install it: `adb install -r nocaps.apk`.
+
+### Tests
+
 Requires **Godot 4.7**. The first run imports the project.
 
 ```bash
