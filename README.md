@@ -15,7 +15,7 @@ Early Beta. Scores may reset. Built for the Solana Mobile **CLOCK IN** hackathon
 
 ## Install the APK
 
-[**Download NOCAPS for Android (APK)**](https://github.com/S1r1u511/nocaps/releases/download/v1.0.0/nocaps-1.0.0-release.apk)
+[**Download NOCAPS for Android (APK)**](https://github.com/S1r1u511/nocaps/releases/latest/download/nocaps.apk)
 
 - Android 7.0+ (API 24). Package: `com.nocapsfun.game`.
 - First screen in about 3 s on a mid-range Android phone (measured on 1.0.0).
